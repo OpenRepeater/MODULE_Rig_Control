@@ -5,3 +5,6 @@ THIS MODULE IS CURRENTLY IN EARLY DEVELOPMENT AND TESTING.
 
 ### Install HamlIb as root:
 apt install libhamlib-utils
+
+### Add svxlink user to port group:
+i.e. /dev/ttyUSB0
