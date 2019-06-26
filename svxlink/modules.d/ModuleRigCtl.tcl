@@ -33,8 +33,7 @@ namespace eval RigCtl {
 
 	# A convenience function for printing out information prefixed by the module name
 	proc printInfo {msg} {
-		variable module_name
-		puts "$module_name: $msg"
+		puts "RIG CONTROL: $msg"
 	}
 
 
@@ -47,6 +46,15 @@ namespace eval RigCtl {
 
 	# Executed when this module is being activated
 	proc activateInit {} {
+		# Construct base rigctl communication string
+		variable CFG_RADIO_ID
+		variable CFG_RADIO_PORT
+		variable CFG_RADIO_BAUD
+		variable RIG_STRING
+		set RIG_STRING "-m $CFG_RADIO_ID -r $CFG_RADIO_PORT -s $CFG_RADIO_BAUD"
+
+
+
 		# Loop through config variables for rig control states and write into array, up to 8 states supported
 		variable RIGCTL
 		set n 1
@@ -84,11 +92,11 @@ namespace eval RigCtl {
 
 		if {$ACCESS_PIN_REQ == "1"} {
 			printInfo "--- PLEASE ENTER YOUR PIN FOLLOWED BY THE POUND SIGN ---"
-			playMsg "access_enter_pin";
+			playModuleMsg "access_enter_pin";
 
 		} else {
 			# No Pin Required but this is the first time the module has been run so play prompt
-			playMsg "enter_command";
+			playModuleMsg "enter_command";
 		}
 
 	}
@@ -97,11 +105,6 @@ namespace eval RigCtl {
 	 # Executed when this module is being deactivated.
 	proc deactivateCleanup {} {
 		printInfo "Module deactivated"
-
-		variable RIGCTL_OFF_DEACTIVATION
-		if {$RIGCTL_OFF_DEACTIVATION == "1"} {
-			RigCtlDefault
-		}
 	}
 
 
@@ -109,115 +112,145 @@ namespace eval RigCtl {
 	#proc RigCtlStatus {} {
 	#	variable RIGCTL
 	#	printInfo "STATUS RIGCTL STATE"
-	#	playMsg "status";
+	#	playModuleMsg "status";
 	#	set RIGCTL_FILE [open "/home/root/rcvalue" r]
 	#	set RIGCTL_STATE [read -nonewline $RIGCTL_FILE]
 	#	printInfo "RIGCTL $RIGCTL_STATE ON"
-	#	playMsg "rigctl";
-	#	playMsg "$RIGCTL_STATE";
-	#	playMsg "on";
+	#	playModuleMsg "rigctl";
+	#	playModuleMsg "$RIGCTL_STATE";
+	#	playModuleMsg "on";
 	#	playSilence 700;
   #}
 
 
+  	#############################################################################
+  	# This procedure to say frequency is in newer local.tcl files
+  	# once it has been added to release versions that ORP get built from,
+  	# it can be removed from this module
+  	#############################################################################
+
+	#
+	# Say the given frequency as intelligently as possible
+	#
+	#   fq -- The frequency in Hz
+	#
+	proc playFrequency {fq} {
+	  if {$fq < 1000} {
+	    set unit "Hz"
+	  } elseif {$fq < 1000000} {
+	    set fq [expr {$fq / 1000.0}]
+	    set unit "kHz"
+	  } elseif {$fq < 1000000000} {
+	    set fq [expr {$fq / 1000000.0}]
+	    set unit "MHz"
+	  } else {
+	    set fq [expr {$fq / 1000000000.0}]
+	    set unit "GHz"
+	  }
+	  playNumber [string trimright [format "%.3f" $fq] ".0"]
+	  playMsg "Core" $unit
+	}
+
+  	#############################################################################
+	# RIG CONTROL PROCEDURES (CAT Control)
+  	#############################################################################
+
+  	###############################
+  	# FREQUENCY PROCEDURES
+  	###############################
+  	
+	proc getRigFreq {} {
+		variable RIG_STRING
+		set RIG_COMMAND "$RIG_STRING f"
+		set RIG_RESULT [exec rigctl {*}$RIG_COMMAND]
+		return $RIG_RESULT
+	}
+
+	proc setRigFreq {freq} {
+		variable RIG_STRING
+		set RIG_COMMAND "$RIG_STRING F $freq"
+		printInfo $RIG_COMMAND
+		exec rigctl {*}$RIG_COMMAND
+	}
+
+
+  	###############################
+  	# MEMORY PROCEDURES
+  	###############################
+  	
+	proc getRigMemory {} {
+		variable RIG_STRING
+		set RIG_COMMAND "$RIG_STRING e"
+		set RIG_RESULT [exec rigctl {*}$RIG_COMMAND]
+		return $RIG_RESULT
+	}
+
+	proc setRigMemory {mem} {
+		variable RIG_STRING
+		set RIG_COMMAND "$RIG_STRING E $mem"
+		exec rigctl {*}$RIG_COMMAND
+		if {$mem == [getRigMemory]} {
+			return "success"
+		} else {
+			return "failed"
+		}
+	}
+
+
+  	#############################################################################
+	# Module Procedures
+  	#############################################################################
+
+	proc printFreq {fq} {
+	  if {$fq < 1000} {
+	    set unit "Hz"
+	  } elseif {$fq < 1000000} {
+	    set fq [expr {$fq / 1000.0}]
+	    set unit "kHz"
+	  } elseif {$fq < 1000000000} {
+	    set fq [expr {$fq / 1000000.0}]
+	    set unit "MHz"
+	  } else {
+	    set fq [expr {$fq / 1000000000.0}]
+	    set unit "GHz"
+	  }
+	  set result [string trimright [format "%.3f" $fq] ".0"]
+	  append result " $unit"
+	  printInfo $result
+	}
+
+
+
+
+  	#############################################################################
+	# DTMF Procedures
+  	#############################################################################
+
 	# Executed when a DTMF command is received
 	proc changeRigState {cmd} {
-		printInfo "DTMF command received: $cmd"
-
 		variable RIGCTL
+		variable currentFreq
 
-                exec python3 /usr/share/svxlink/python/set_pttlock_on.py
-                printInfo "pttlock on"
-                playMsg "pttlockon"
+#                exec python3 /usr/share/svxlink/python/set_pttlock_on.py
+#                printInfo "pttlock on"
+#                playModuleMsg "pttlockon"
 
 		# printInfo $RIGCTL(2)
 
-		if {$cmd == "01"} {
-		  # variable CFG_RIGCTL_1
-		  # set MEM1 [set CFG_RIGCTL_1]
-		  printInfo $RIGCTL(1)
-		  playMsg "mem1"
-                  #set pttlockon {exec python3 /usr/share/svxlink/python/set_pttlock_on.py}
-                  #printInfo $pttlockon
-		  #exec rigctl {*}{-m 370 -r /dev/ttyUSB0 -s 9600 E 1}
-		  exec rigctl {*}$RIGCTL(1)
-		  printInfo "Memory 1 selected"
-		  playMsg "mem1sel"
-
-		} elseif {$cmd == "02"} {
-		    # variable CFG_RIGCTL_2
-		    # set MEM2 [set CFG_RIGCTL_2]
-		    printInfo $RIGCTL(2)
-		    playMsg "mem2"
-		    #exec rigctl {*}{-m 370 -r /dev/ttyUSB0 -s 9600 E 2}
-		    exec rigctl {*}$RIGCTL(2)
-		    printInfo "Memory 2 selected"
-		    playMsg "mem2sel"
-
-		} elseif {$cmd == "03"} {
-		    # variable CFG_RIGCTL_3
-		    # set MEM3 [set CFG_RIGCTL_3]
-		    printInfo $RIGCTL(3)
-		    playMsg "mem3"
-		    #exec /usr/bin/rigctl {*}{-m 370 -r /dev/ttyUSB0 -s 9600 E 3}
-		    exec rigctl {*}$RIGCTL(3)
-		    printInfo "Memory 3 selected"
-		    playMsg "mem3sel"
-
-		} elseif {$cmd == "04"} {
-		    # variable CFG_RIGCTL_4
-		    # set MEM4 [set CFG_RIGCTL_4]
-                    printInfo $RIGCTL(4)
-		    playMsg "mem4"
-		    #exec /usr/bin/rigctl {*}{-m 370 -r /dev/ttyUSB0 -s 9600 E 4}
-		    exec rigctl {*}$RIGCTL(4)
-		    printInfo "Memory 4 selected"
-				playMsg "mem4sel"
-
-		} elseif {$cmd == "05"} {
-		    # variable CFG_RIGCTL_5
-		    # set MEM5 [set CFG_RIGCTL_5]
-                    printInfo $RIGCTL(5)
-		    playMsg "mem5"
-		    #exec /usr/bin/rigctl {*}{-m 370 -r /dev/ttyUSB0 -s 9600 E 5}
-		    exec rigctl {*}$RIGCTL(5)
-		    printInfo "Memory 5 selected"
-		    playMsg "mem5sel"
-
-		} elseif {$cmd == "06"} {
-		    # variable CFG_RIG_CTL_6
-		    # set MEM6 [set RIGCTL_6]
-                    printInfo $RIGCTL(6)
-		    playMsg "mem6"
-		    # exec /usr/bin/rigctl {*}{-m 370 -r /dev/ttyUSB0 -s 9600 E 6}
-		    exec rigctl {*}$RIGCTL(6)
-		    printInfo "Memory 6 selected"
-		    playMsg "mem6sel"
-
-		} elseif {$cmd == "07"} {
-		    # variable CFG_RIGCTL_7
-		    # set MEM7 [set CFG_RIGCTL_7]
-                    printInfo $RIGCTL(7)
-		    playMsg "mem7"
-		    #exec /usr/bin/rigctl {*}{-m 370 -r /dev/ttyUSB0 -s 9600 E 7}
-		    exec rigctl {*}$RIGCTL(7)
-		    printInfo "Memory 7 selected"
-		    playMsg "mem7sel"
-
-		} elseif {$cmd == "08"} {
-		    # variable CFG_RIGCTL_8
-		    # set MEM7 [set RIGCTL_8]
-                    printInfo $RIGCTL(8)
-		    playMsg "mem8"
-		    #exec /usr/bin/rigctl {*}{-m 370 -r /dev/ttyUSB0 -s 9600 E 8}
-		    exec rigctl {*}$RIGCTL(8)
-                    printInfo "Memory 8 selected"
-		    playMsg "mem8sel"
-
-                } elseif {$cmd == "09"} {
-                    exec python3 /usr/share/svxlink/python/set_pttlock_off.py
-                    printInfo "pttlock off"
-                    playMsg "pttlockoff"
+		if {$cmd == "01" || $cmd == "02" || $cmd == "03" || $cmd == "04" || $cmd == "05" || $cmd == "06" || $cmd == "07" || $cmd == "08"} {
+			set curMem $cmd
+			playModuleMsg "memory"
+			playNumber $curMem
+			playSilence 1000;
+			if {[setRigMemory $curMem] == "success" } {
+			    printInfo "Memory $curMem selected"
+				set currentFreq [getRigFreq]
+				printFreq $currentFreq
+				playFrequency $currentFreq
+			} else {
+			    printInfo "Failed to set memory $curMem"
+				playMsg "Default" "operation_failed"
+			}
 
 		} elseif {$cmd == ""} {
 		    deactivateModule
@@ -239,15 +272,15 @@ namespace eval RigCtl {
 		if {$ACCESS_PIN_REQ == 1} {
 			# Pin Required
 			if {$ACCESS_GRANTED == 1} {
-				# Access Granted - Pass commands to relay control
+				# Access Granted - Pass commands to rig control
 				changeRigState $cmd
 			} else {
 				# Access Not Granted Yet, Process Pin
 				if {$cmd == $CFG_ACCESS_PIN} {
 					set ACCESS_GRANTED 1
 					printInfo "ACCESS GRANTED --------------------"
-					playMsg "access_granted";
-					playMsg "enter_command";
+					playModuleMsg "access_granted";
+					playModuleMsg "enter_command";
 				} elseif {$cmd == ""} {
 					# If only pound sign is entered, deactivate module
 					deactivateModule
@@ -257,11 +290,11 @@ namespace eval RigCtl {
 
 					if {$ACCESS_ATTEMPTS_ATTEMPTED < $CFG_ACCESS_ATTEMPTS_ALLOWED} {
 						printInfo "Please try again!!! --------------------"
-						playMsg "access_invalid_pin";
-						playMsg "access_try_again";
+						playModuleMsg "access_invalid_pin";
+						playModuleMsg "access_try_again";
 					} else {
 						printInfo "ACCESS DENIED!!! --------------------"
-						playMsg "access_denied";
+						playModuleMsg "access_denied";
 						deactivateModule
 					}
 				}
@@ -282,14 +315,14 @@ namespace eval RigCtl {
 
 	# Executed when the squelch opened or closed.
 	proc squelchOpen {is_open} {
-		if {$is_open} {set str "OPEN"} else { set str "CLOSED"}
-		printInfo "The squelch is $str"
+		# if {$is_open} {set str "OPEN"} else { set str "CLOSED"}
+		# printInfo "The squelch is $str"
 	}
 
 
 	# Executed when all announcement messages has been played.
 	proc allMsgsWritten {} {
-		#printInfo "Test allMsgsWritten called..."
+		# printInfo "Test allMsgsWritten called..."
 	}
 
 

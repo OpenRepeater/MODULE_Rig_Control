@@ -13,6 +13,17 @@ $module_config_array['Module'.$cur_mod['svxlinkName']] = [
 ];
 
 $module_config_array['Module'.$cur_mod['svxlinkName']] += [
+	'RADIO_ID' => '127',
+	'RADIO_PORT' => '/dev/ttyUSB0',
+	'RADIO_BAUD' => '9600',
+];
+
+$module_config_array['Module'.$cur_mod['svxlinkName']] += [
+	'ACCESS_PIN' => '1234',
+	'ACCESS_ATTEMPTS_ALLOWED' => '3',
+];
+
+$module_config_array['Module'.$cur_mod['svxlinkName']] += [
 	'RIGCTL_1' => '"-m 370 -r /dev/ttyUSB0 -s 9600 E 1"',
 	'RIGCTL_2' => '"-m 370 -r /dev/ttyUSB0 -s 9600 E 2"',
 	'RIGCTL_3' => '"-m 370 -r /dev/ttyUSB0 -s 9600 E 3"',

@@ -31,7 +31,7 @@ namespace eval RigCtl {
 
 
 	# An "overloaded" playMsg that eliminates the need to write the module name as the first argument.
-	proc playMsg {msg} {
+	proc playModuleMsg {msg} {
 		variable module_name
 		::playMsg $module_name $msg
 	}
@@ -81,16 +81,16 @@ namespace eval RigCtl {
 	# Called when an illegal command has been entered
 	proc unknown_command {cmd} {
 		playNumber $cmd
-		playMsg "unknown_command"
+		playModuleMsg "unknown_command"
 	}
 
 	proc dtmfDigitReceived {char duration} {
-		printInfo "DTMF digit $char received with duration $duration milliseconds";
+#		printInfo "DTMF digit $char received with duration $duration milliseconds";
 	}
 
 	# Executed when a DTMF digit (0-9, A-F, *, #) is received
 	proc dtmfDigitReceived {char duration} {
-		printInfo "DTMF digit $char received with duration $duration milliseconds";
+#		printInfo "DTMF digit $char received with duration $duration milliseconds";
 	}
 
 
