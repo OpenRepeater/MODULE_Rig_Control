@@ -23,15 +23,4 @@ $module_config_array['Module'.$cur_mod['svxlinkName']] += [
 	'ACCESS_ATTEMPTS_ALLOWED' => '3',
 ];
 
-$module_config_array['Module'.$cur_mod['svxlinkName']] += [
-	'RIGCTL_1' => '"-m 370 -r /dev/ttyUSB0 -s 9600 E 1"',
-	'RIGCTL_2' => '"-m 370 -r /dev/ttyUSB0 -s 9600 E 2"',
-	'RIGCTL_3' => '"-m 370 -r /dev/ttyUSB0 -s 9600 E 3"',
-	'RIGCTL_4' => '"-m 370 -r /dev/ttyUSB0 -s 9600 E 4"',
-	'RIGCTL_5' => '"-m 370 -r /dev/ttyUSB0 -s 9600 E 5"',
-	'RIGCTL_6' => '"-m 370 -r /dev/ttyUSB0 -s 9600 E 6"',
-	'RIGCTL_7' => '"-m 370 -r /dev/ttyUSB0 -s 9600 E 7"',
-	'RIGCTL_8' => '"-m 370 -r /dev/ttyUSB0 -s 9600 E 8"',
-];
-
 ?>
