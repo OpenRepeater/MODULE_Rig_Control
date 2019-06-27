@@ -143,16 +143,20 @@ namespace eval RigCtl {
   	
 	proc getRigFreq {} {
 		variable RIG_STRING
-		set RIG_COMMAND "$RIG_STRING f"
+		set RIG_COMMAND "$RIG_STRING get_freq"
 		set RIG_RESULT [exec rigctl {*}$RIG_COMMAND]
 		return $RIG_RESULT
 	}
 
 	proc setRigFreq {freq} {
 		variable RIG_STRING
-		set RIG_COMMAND "$RIG_STRING F $freq"
-		printInfo $RIG_COMMAND
+		set RIG_COMMAND "$RIG_STRING set_freq $freq"
 		exec rigctl {*}$RIG_COMMAND
+		if {$freq == [getRigFreq]} {
+			return "success"
+		} else {
+			return "failed"
+		}
 	}
 
 
@@ -162,14 +166,14 @@ namespace eval RigCtl {
   	
 	proc getRigMemory {} {
 		variable RIG_STRING
-		set RIG_COMMAND "$RIG_STRING e"
+		set RIG_COMMAND "$RIG_STRING get_mem"
 		set RIG_RESULT [exec rigctl {*}$RIG_COMMAND]
 		return $RIG_RESULT
 	}
 
 	proc setRigMemory {mem} {
 		variable RIG_STRING
-		set RIG_COMMAND "$RIG_STRING E $mem"
+		set RIG_COMMAND "$RIG_STRING set_mem $mem"
 		exec rigctl {*}$RIG_COMMAND
 		if {$mem == [getRigMemory]} {
 			return "success"
