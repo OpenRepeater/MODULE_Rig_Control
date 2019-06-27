@@ -54,24 +54,6 @@ namespace eval RigCtl {
 		set RIG_STRING "-m $CFG_RADIO_ID -r $CFG_RADIO_PORT -s $CFG_RADIO_BAUD"
 
 
-
-		# Loop through config variables for rig control states and write into array, up to 8 states supported
-		variable RIGCTL
-		set n 1
-		while {$n <= 8} {
-			variable CFG_RIGCTL_$n
-			# printInfo [set CFG_RIGCTL_$n]
-			# if { ([info exists CFG_RIGCTL_$n]) && ([set CFG_RIGCTL_$n] > 0) } {
-				# set RIGCTL($n) [set CFG_RIGCTL_$n]
-				# printInfo $RIGCTL($n)
-			# }
-			  set RIGCTL($n) [set CFG_RIGCTL_$n]
-				printInfo $RIGCTL($n)
-		    set n [expr {$n + 1}]
-		}
-
-    # printInfo $RIGCTL(1)
-
 		# Access Variables
 		variable CFG_ACCESS_PIN
 		variable CFG_ACCESS_ATTEMPTS_ALLOWED

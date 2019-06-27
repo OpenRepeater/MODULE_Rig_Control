@@ -19,7 +19,7 @@ $module_config_array['Module'.$cur_mod['svxlinkName']] += [
 ];
 
 $module_config_array['Module'.$cur_mod['svxlinkName']] += [
-	'ACCESS_PIN' => '1234',
+	'#ACCESS_PIN' => '1234',
 	'ACCESS_ATTEMPTS_ALLOWED' => '3',
 ];
 
