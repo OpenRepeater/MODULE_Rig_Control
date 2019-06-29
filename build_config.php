@@ -5,22 +5,34 @@
 * the requiried INI format and write the config file to the appropriate location with the correct naming.
 */
 
+$options = unserialize($cur_mod['moduleOptions']);
+
 // Build Config
 $module_config_array['Module'.$cur_mod['svxlinkName']] = [
 	'NAME' => $cur_mod['svxlinkName'],
 	'PLUGIN_NAME' => 'Tcl',
 	'ID' => $cur_mod['svxlinkID'],
+	'TIMEOUT' => intval($options['timeout_min']) * 60,				
 ];
 
 $module_config_array['Module'.$cur_mod['svxlinkName']] += [
-	'RADIO_ID' => '127',
-	'RADIO_PORT' => '/dev/ttyUSB0',
-	'RADIO_BAUD' => '9600',
+	'RADIO_ID' => $options['rig_num'],
+	'RADIO_PORT' => $options['port'],
+	'RADIO_BAUD' => $options['baud'],
 ];
 
-$module_config_array['Module'.$cur_mod['svxlinkName']] += [
-	'#ACCESS_PIN' => '1234',
-	'ACCESS_ATTEMPTS_ALLOWED' => '3',
-];
+
+if($options['access_pin']) {
+	// Define Access Code. To disable, comment out.
+	$module_config_array['Module'.$cur_mod['svxlinkName']] += [
+		'ACCESS_PIN' => $options['access_pin'],
+	];
+
+	if($options['access_attempts_allowed']) {
+		$module_config_array['Module'.$cur_mod['svxlinkName']] += [
+			'ACCESS_ATTEMPTS_ALLOWED' => $options['access_attempts_allowed'],
+		];
+	}
+}
 
 ?>
